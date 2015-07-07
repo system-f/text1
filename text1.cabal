@@ -30,10 +30,10 @@ library
 
   build-depends:
                       base          >= 3   && < 5
-                    , mtl           >= 2.0 && < 2.3
-                    , semigroups    >= 0.8
-                    , semigroupoids >= 4.0
+                    , semigroups    >= 0.8 && < 1
+                    , text          >= 1.2 && < 2
                     , lens          >= 4.0 && < 5
+                    , binary        >= 0.7 && < 1
                     
   ghc-options:
                     -Wall
