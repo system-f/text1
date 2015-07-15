@@ -38,7 +38,7 @@ import Data.Ord(Ord, Ordering)
 import Data.Semigroup(Semigroup((<>)))
 import Data.String(String)
 import Data.Text(Text)
-import qualified Data.Text as Text(cons, snoc, append, null, last, empty, length, compareLength, uncons, pack, unpack)
+import qualified Data.Text as Text(cons, snoc, append, null, init, last, empty, length, compareLength, uncons, pack, unpack)
 import Data.Text.Lens(IsText(packed))
 import Data.Traversable(Traversable(traverse))
 import Data.Tuple(uncurry)
@@ -107,12 +107,12 @@ last1 (Text1 h t) =
 init1 ::
   Text1
   -> Text
-init1 (Text1 _ t) =
+init1 (Text1 h t) =
   if Text.null t
     then
       Text.empty
     else
-      t
+      Text.cons h (Text.init t)
 
 isSingle ::
   Text1
