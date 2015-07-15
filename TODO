@@ -1,0 +1,6 @@
+* init1, last1 should be lenses
+* instance Cons, Snoc for Text1
+* reverse iso
+* consider other list-like optics
+* tests
+* Lazy version of Text
