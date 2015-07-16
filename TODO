@@ -1,6 +1,6 @@
-* init1, last1 should be lenses
 * reverse iso
 * consider other list-like optics
 * tests
 * Lazy version of Text
-* Cons1, Snoc1
+* Reversing, Plated
+* Cons1, Snoc1, AsSingle

@@ -6,13 +6,6 @@
 module Data.Text1(
   Text1(Text1)
 , singleton
-, cons1
-, snoc1
-, append
-, last1
-, init1
-, uncons1
-, unsnoc1
 , isSingle
 , length
 , compareLength
@@ -20,16 +13,17 @@ module Data.Text1(
 , _string
 , _head1
 , _tail1
+, _last1
+, _init1
 , IsText1(packed1, text1)
 , unpacked1
 ) where
 
 import Control.Category(Category(id, (.)))
-import Control.Lens(IndexedTraversal', Cons(_Cons), Snoc(_Snoc), Iso', Lens', Prism', prism', iso, lens, (^.), (#), from, indexing, traversed)
-import qualified Control.Lens as Lens(uncons)
+import Control.Lens(IndexedTraversal', Cons(_Cons), Snoc(_Snoc), Reversing(reversing), uncons, unsnoc, Iso', Lens', Prism', prism', iso, lens, (^.), (#), from, indexing, traversed)
 import Control.Monad(Monad(return, (>>)))
 import Data.Binary(Binary(put, get))
-import Data.Bool -- (Bool)
+import Data.Bool(Bool)
 import Data.Char(Char)
 import Data.Data(Data)
 import Data.Eq(Eq)
@@ -59,8 +53,8 @@ instance Show Text1 where
     show (Text.cons h t)
 
 instance Semigroup Text1 where
-  (<>) = 
-    append
+  Text1 h1 t1 <> t = 
+    Text1 h1 (Text.append t1 (_text # t))
 
 instance Binary Text1 where
   put (Text1 h t) =
@@ -75,63 +69,6 @@ singleton ::
   -> Text1
 singleton c =
   Text1 c Text.empty
-
-cons1 ::
-  Char
-  -> Text1
-  -> Text1
-cons1 c t = 
-  Text1 c (_text # t)
-
-snoc1 ::
-  Text1
-  -> Char
-  -> Text1
-snoc1 (Text1 h t) c =
-  Text1 h (Text.snoc t c)
-
-append ::
-  Text1
-  -> Text1
-  -> Text1
-append (Text1 h1 t1) t =
-  Text1 h1 (Text.append t1 (_text # t))
-
-last1 ::
-  Text1
-  -> Char
-last1 (Text1 h t) =
-  if Text.null t
-    then
-      h
-    else
-      Text.last t
-
-init1 ::
-  Text1
-  -> Text
-init1 (Text1 h t) =
-  if Text.null t
-    then
-      Text.empty
-    else
-      Text.cons h (Text.init t)
-
-uncons1 ::
-  Text1
-  -> Maybe (Char, Text1)
-uncons1 (Text1 h t) =
-  fmap (\(h', t') -> (h, Text1 h' t')) (Text.uncons t)
-
-unsnoc1 ::
-  Text1
-  -> Maybe (Text1, Char)
-unsnoc1 (Text1 h t) =
-  if Text.null t
-    then
-      Nothing
-    else
-      Just (Text1 h (Text.init t), Text.last t)
 
 isSingle ::
   Text1
@@ -168,7 +105,7 @@ _string ::
 _string =
   prism'
     (\(Text1 h t) -> h : Text.unpack t)
-    (fmap (\(h, t) -> Text1 h (Text.pack t)) . Lens.uncons)
+    (fmap (\(h, t) -> Text1 h (Text.pack t)) . uncons)
 
 _head1 ::
   Lens'
@@ -187,6 +124,36 @@ _tail1 =
   lens
     (\(Text1 _ t) -> t)
     (\(Text1 h _) t -> Text1 h t)
+
+_last1 ::
+  Lens'
+    Text1
+    Char
+_last1 =
+  lens
+    (\(Text1 h t) -> case unsnoc t of
+                       Nothing -> h
+                       Just (_, l) -> l)
+    (\(Text1 h t) x -> case unsnoc t of
+                         Nothing -> Text1 x t
+                         Just (i, _) -> Text1 h i)
+
+_init1 ::
+  Lens'
+    Text1
+    Text
+_init1 =
+  lens
+    (\(Text1 h t) -> case unsnoc t of
+                       Nothing -> Text.empty
+                       Just (i, _) -> Text.cons h i)
+    (\(Text1 h t) x ->
+      let r = case unsnoc t of
+                Nothing -> h
+                Just (_, l) -> l
+      in case uncons x of
+                Nothing -> Text1 r Text.empty
+                Just (h', t') -> Text1 h' (Text.snoc t' r))
 
 class IsText1 t where
   packed1 :: 
@@ -221,11 +188,21 @@ unpacked1 =
 instance Cons Text1 Text1 Char Char where
   _Cons =
     prism'
-      (uncurry cons1)
-      uncons1
+      (\(c, t) -> Text1 c (_text # t))
+      (\(Text1 h t) -> fmap (\(h', t') -> (h, Text1 h' t')) (Text.uncons t))
 
 instance Snoc Text1 Text1 Char Char where
   _Snoc =
     prism'
-      (uncurry snoc1)
-      unsnoc1
+      (\(Text1 h t, c) -> Text1 h (Text.snoc t c))
+      (\(Text1 h t) -> if Text.null t
+                         then
+                           Nothing
+                         else
+                           Just (Text1 h (Text.init t), Text.last t))
+
+instance Reversing Text1 where
+  reversing (Text1 h t) =
+    case uncons (reversing t) of
+      Nothing -> Text1 h Text.empty
+      Just (h', t') -> Text1 h' (Text.snoc t' h)
