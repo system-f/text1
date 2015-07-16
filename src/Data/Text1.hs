@@ -16,7 +16,7 @@ module Data.Text1(
 , _init1
 , IsText1(packed1, text1)
 , unpacked1
-, AsSingle(..)
+, AsSingle(_Single)
 ) where
 
 import Control.Category(Category(id, (.)))
