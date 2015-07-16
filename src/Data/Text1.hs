@@ -6,8 +6,6 @@
 
 module Data.Text1(
   Text1(Text1)
-, singleton
-, isSingle
 , length
 , compareLength
 , _text
@@ -25,7 +23,6 @@ import Control.Category(Category(id, (.)))
 import Control.Lens(IndexedTraversal', Cons(_Cons), Snoc(_Snoc), Reversing(reversing), uncons, unsnoc, Iso', Lens', Prism', prism', iso, lens, (^.), (#), from, indexing, traversed)
 import Control.Monad(Monad(return, (>>=), (>>)))
 import Data.Binary(Binary(put, get))
-import Data.Bool(Bool)
 import Data.Char(Char)
 import Data.Data(Data)
 import Data.Eq(Eq)
@@ -66,18 +63,6 @@ instance Binary Text1 where
     do h <- get
        t <- get
        return (Text1 h t)
-
-singleton ::
-  Char
-  -> Text1
-singleton c =
-  Text1 c Text.empty
-
-isSingle ::
-  Text1
-  -> Bool
-isSingle (Text1 _ t) =
-  Text.null t
 
 length ::
   Text1
