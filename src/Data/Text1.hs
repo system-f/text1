@@ -1,6 +1,7 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE FunctionalDependencies #-}
 {-# LANGUAGE DeriveDataTypeable #-}
 
 module Data.Text1(
@@ -17,11 +18,12 @@ module Data.Text1(
 , _init1
 , IsText1(packed1, text1)
 , unpacked1
+, AsSingle(..)
 ) where
 
 import Control.Category(Category(id, (.)))
 import Control.Lens(IndexedTraversal', Cons(_Cons), Snoc(_Snoc), Reversing(reversing), uncons, unsnoc, Iso', Lens', Prism', prism', iso, lens, (^.), (#), from, indexing, traversed)
-import Control.Monad(Monad(return, (>>)))
+import Control.Monad(Monad(return, (>>=), (>>)))
 import Data.Binary(Binary(put, get))
 import Data.Bool(Bool)
 import Data.Char(Char)
@@ -29,13 +31,14 @@ import Data.Data(Data)
 import Data.Eq(Eq)
 import Data.Functor(Functor(fmap))
 import Data.Int(Int)
+import Data.List as List(null)
 import Data.List.NonEmpty(NonEmpty((:|)))
 import Data.Maybe(Maybe(Just, Nothing))
 import Data.Ord(Ord, Ordering)
 import Data.Semigroup(Semigroup((<>)))
 import Data.String(String)
 import Data.Text(Text)
-import qualified Data.Text as Text(cons, snoc, append, null, init, last, empty, length, compareLength, uncons, pack, unpack)
+import qualified Data.Text as Text(cons, snoc, append, null, init, last, empty, length, compareLength, uncons, pack, unpack, singleton)
 import Data.Text.Lens(IsText(packed))
 import Data.Traversable(Traversable(traverse))
 import Data.Tuple(uncurry)
@@ -206,3 +209,42 @@ instance Reversing Text1 where
     case uncons (reversing t) of
       Nothing -> Text1 h Text.empty
       Just (h', t') -> Text1 h' (Text.snoc t' h)
+
+----
+-- The following should be in a lens-based package
+----
+
+class AsSingle c a | c -> a where
+  _Single :: Prism' c a
+
+instance AsSingle [a] a where
+  _Single =
+    prism'
+      (\a -> [a])
+      (\c -> case c of 
+               [a] -> Just a
+               _   -> Nothing)
+
+instance AsSingle Text Char where
+  _Single =
+    prism'
+      Text.singleton
+      (\t -> uncons t >>= \(h, t') -> if Text.null t' then Just h else Nothing)
+
+instance AsSingle (Maybe a) a where
+  _Single =
+    prism'
+      Just
+      id
+
+instance AsSingle (NonEmpty a) a where
+  _Single =
+    prism'
+      (\a -> a :| [])
+      (\(h :| t) -> if List.null t then Just h else Nothing)
+
+instance AsSingle Text1 Char where
+  _Single =
+    prism'
+      (\c -> Text1 c Text.empty)
+      (\(Text1 h t) -> if Text.null t then Just h else Nothing)
