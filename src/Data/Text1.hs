@@ -17,10 +17,11 @@ module Data.Text1(
 , IsText1(packed1, text1)
 , unpacked1
 , AsSingle(_Single)
+, OneAnd(_OneAnd)
 ) where
 
 import Control.Category(Category(id, (.)))
-import Control.Lens(IndexedTraversal', Cons(_Cons), Snoc(_Snoc), Reversing(reversing), uncons, unsnoc, Iso', Lens', Prism', prism', iso, lens, (^.), (#), from, indexing, traversed)
+import Control.Lens(Iso, IndexedTraversal', Cons(_Cons), Snoc(_Snoc), Reversing(reversing), uncons, unsnoc, Iso', Lens', Prism', prism', iso, lens, (^.), (#), from, indexing, traversed)
 import Control.Monad(Monad(return, (>>=), (>>)))
 import Data.Binary(Binary(put, get))
 import Data.Char(Char)
@@ -233,3 +234,19 @@ instance AsSingle Text1 Char where
     prism'
       (\c -> Text1 c Text.empty)
       (\(Text1 h t) -> if Text.null t then Just h else Nothing)
+
+class OneAnd s t a b x y | s -> a, s -> x, t -> b, t -> y, s b -> t, x b -> t, t a -> s, y a -> s where
+  _OneAnd ::
+    Iso s t (a, x) (b, y)
+
+instance OneAnd Text1 Text1 Char Char Text Text where
+  _OneAnd =
+    iso
+      (\(Text1 h t) -> (h, t))
+      (uncurry Text1)
+
+instance OneAnd (NonEmpty a) (NonEmpty b) a b [a] [b] where
+  _OneAnd =
+    iso
+      (\(h :| t) -> (h, t))
+      (uncurry (:|))

@@ -7,6 +7,7 @@
 * Remove functions in favour of type-class implementations.
 * Reversing instance.
 * AsSingle type-class and instances.
+* OneAnd type-class and instances.
 
 0.0.1
 
