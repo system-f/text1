@@ -6,11 +6,13 @@
 module Data.Text1(
   Text1(Text1)
 , singleton
-, cons
-, snoc
+, cons1
+, snoc1
 , append
 , last1
 , init1
+, uncons1
+, unsnoc1
 , isSingle
 , length
 , compareLength
@@ -23,17 +25,18 @@ module Data.Text1(
 ) where
 
 import Control.Category(Category(id, (.)))
-import Control.Lens(IndexedTraversal', Cons(_Cons), Iso', Lens', Prism', prism', iso, lens, (^.), (#), from, indexing, traversed)
+import Control.Lens(IndexedTraversal', Cons(_Cons), Snoc(_Snoc), Iso', Lens', Prism', prism', iso, lens, (^.), (#), from, indexing, traversed)
 import qualified Control.Lens as Lens(uncons)
 import Control.Monad(Monad(return, (>>)))
 import Data.Binary(Binary(put, get))
-import Data.Bool(Bool)
+import Data.Bool -- (Bool)
 import Data.Char(Char)
 import Data.Data(Data)
 import Data.Eq(Eq)
 import Data.Functor(Functor(fmap))
 import Data.Int(Int)
 import Data.List.NonEmpty(NonEmpty((:|)))
+import Data.Maybe(Maybe(Just, Nothing))
 import Data.Ord(Ord, Ordering)
 import Data.Semigroup(Semigroup((<>)))
 import Data.String(String)
@@ -73,18 +76,18 @@ singleton ::
 singleton c =
   Text1 c Text.empty
 
-cons ::
+cons1 ::
   Char
   -> Text1
   -> Text1
-cons c t = 
+cons1 c t = 
   Text1 c (_text # t)
 
-snoc ::
+snoc1 ::
   Text1
   -> Char
   -> Text1
-snoc (Text1 h t) c =
+snoc1 (Text1 h t) c =
   Text1 h (Text.snoc t c)
 
 append ::
@@ -113,6 +116,22 @@ init1 (Text1 h t) =
       Text.empty
     else
       Text.cons h (Text.init t)
+
+uncons1 ::
+  Text1
+  -> Maybe (Char, Text1)
+uncons1 (Text1 h t) =
+  fmap (\(h', t') -> (h, Text1 h' t')) (Text.uncons t)
+
+unsnoc1 ::
+  Text1
+  -> Maybe (Text1, Char)
+unsnoc1 (Text1 h t) =
+  if Text.null t
+    then
+      Nothing
+    else
+      Just (Text1 h (Text.init t), Text.last t)
 
 isSingle ::
   Text1
@@ -202,5 +221,11 @@ unpacked1 =
 instance Cons Text1 Text1 Char Char where
   _Cons =
     prism'
-      (uncurry cons)
-      (\(Text1 h t) -> fmap (\(h', t') -> (h, Text1 h' t')) (Text.uncons t))
+      (uncurry cons1)
+      uncons1
+
+instance Snoc Text1 Text1 Char Char where
+  _Snoc =
+    prism'
+      (uncurry snoc1)
+      unsnoc1
