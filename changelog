@@ -1,3 +1,11 @@
+0.0.3
+
+* Tests.
+* `tpacked1` and `tunpacked1`.
+* `AsText1` type-class and instances.
+* Fix bug in `compareLength`.
+* Fix bug in `last1`.
+
 0.0.2
 
 * Fix issue #1 in `init1`

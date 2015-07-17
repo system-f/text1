@@ -6,27 +6,27 @@
 
 module Data.Text1(
   Text1(Text1)
-, length
-, compareLength
-, _text
-, _string
+, length1
+, compareLength1
 , _head1
 , _tail1
 , _last1
 , _init1
-, IsText1(packed1, text1)
-, unpacked1
+, AsText1(_Text1)
+, IsText1(packed1, tpacked1, unpacked1, tunpacked1, text1)
 , AsSingle(_Single)
 , OneAnd(_OneAnd)
 ) where
 
+import Control.Applicative(Applicative)
 import Control.Category(Category(id, (.)))
-import Control.Lens(Iso, IndexedTraversal', Cons(_Cons), Snoc(_Snoc), Reversing(reversing), uncons, unsnoc, Iso', Lens', Prism', prism', iso, lens, (^.), (#), from, indexing, traversed)
+import Control.Lens(Iso, IndexedTraversal', Optic', Profunctor, Choice, Cons(_Cons), Snoc(_Snoc), Reversing(reversing), uncons, unsnoc, Iso', Lens', Prism', prism', iso, lens, (^.), (#), from, indexing, traversed)
 import Control.Monad(Monad(return, (>>=), (>>)))
 import Data.Binary(Binary(put, get))
 import Data.Char(Char)
 import Data.Data(Data)
 import Data.Eq(Eq)
+import Data.Foldable(Foldable(toList))
 import Data.Functor(Functor(fmap))
 import Data.Int(Int)
 import Data.List as List(null)
@@ -41,7 +41,15 @@ import Data.Text.Lens(IsText(packed))
 import Data.Traversable(Traversable(traverse))
 import Data.Tuple(uncurry)
 import Data.Typeable(Typeable)
-import Prelude(Show(show), Num((+)))
+import Prelude(Show(show), Num((+), (-)))
+
+-- $setup
+-- >>> import Control.Lens
+-- >>> import Data.Char
+-- >>> import qualified Data.Text as Text
+-- >>> import Prelude
+-- >>> import Test.QuickCheck
+-- >>> instance Arbitrary Text1 where arbitrary = do c <- arbitrary; t <- arbitrary; return (Text1 c (Text.pack t))
 
 data Text1 =
   Text1
@@ -53,9 +61,12 @@ instance Show Text1 where
   show (Text1 h t) =
     show (Text.cons h t)
 
+-- |
+--
+-- prop> ((x <> y) <> z) == (x <> (y <> z :: Text1))
 instance Semigroup Text1 where
   Text1 h1 t1 <> t = 
-    Text1 h1 (Text.append t1 (_text # t))
+    Text1 h1 (Text.append t1 (_Text1 # t))
 
 instance Binary Text1 where
   put (Text1 h t) =
@@ -65,37 +76,56 @@ instance Binary Text1 where
        t <- get
        return (Text1 h t)
 
-length ::
+-- |
+--
+-- >>> fmap length1 ("a" ^? _Text1)
+-- Just 1
+--
+-- >>> fmap length1 ("abc" ^? _Text1)
+-- Just 3
+--
+-- prop> length1 t >= 1
+length1 ::
   Text1
   -> Int
-length (Text1 _ t) =
+length1 (Text1 _ t) =
   1 + Text.length t
 
-compareLength ::
+-- |
+--
+-- >>> fmap (`compareLength1` 1) ("a" ^? _Text1)
+-- Just EQ
+--
+-- >>> fmap (`compareLength1` 3) ("a" ^? _Text1)
+-- Just LT
+--
+-- >>> fmap (`compareLength1` 1) ("abc" ^? _Text1)
+-- Just GT
+--
+-- >>> fmap (`compareLength1` 3) ("abc" ^? _Text1)
+-- Just EQ
+--
+-- >>> fmap (`compareLength1` 5) ("abc" ^? _Text1)
+-- Just LT
+--
+-- prop> compareLength1 t 1 /= LT
+compareLength1 ::
   Text1
   -> Int
   -> Ordering
-compareLength (Text1 _ t) n =
-  Text.compareLength t (n + 1)
+compareLength1 (Text1 _ t) n =
+  Text.compareLength t (n - 1)
 
-_text ::
-  Prism'
-    Text
-    Text1
-_text =
-  prism'
-    (\(Text1 h t) -> Text.cons h t)
-    (fmap (uncurry Text1) . Text.uncons)
-
-_string ::
-  Prism'
-    String
-    Text1
-_string =
-  prism'
-    (\(Text1 h t) -> h : Text.unpack t)
-    (fmap (\(h, t) -> Text1 h (Text.pack t)) . uncons)
-
+-- |
+--
+-- >>> fmap (^. _head1) ("a" ^? _Text1)
+-- Just 'a'
+--
+-- >>> fmap (^. _head1) ("abc" ^? _Text1)
+-- Just 'a'
+--
+-- >>> fmap (_head1 %~ toUpper) ("abc" ^? _Text1)
+-- Just "Abc"
 _head1 ::
   Lens'
     Text1
@@ -105,6 +135,16 @@ _head1 =
     (\(Text1 h _) -> h)
     (\(Text1 _ t) h -> Text1 h t)
 
+-- |
+--
+-- >>> fmap (^. _tail1) ("a" ^? _Text1)
+-- Just ""
+--
+-- >>> fmap (^. _tail1) ("abc" ^? _Text1)
+-- Just "bc"
+--
+-- >>> fmap (_tail1 %~ Text.toUpper) ("abc" ^? _Text1)
+-- Just "aBC"
 _tail1 ::
   Lens'
     Text1
@@ -114,6 +154,16 @@ _tail1 =
     (\(Text1 _ t) -> t)
     (\(Text1 h _) t -> Text1 h t)
 
+-- |
+--
+-- >>> fmap (^. _last1) ("a" ^? _Text1)
+-- Just 'a'
+--
+-- >>> fmap (^. _last1) ("abc" ^? _Text1)
+-- Just 'c'
+--
+-- >>> fmap (_last1 %~ toUpper) ("abc" ^? _Text1)
+-- Just "abC"
 _last1 ::
   Lens'
     Text1
@@ -125,8 +175,21 @@ _last1 =
                        Just (_, l) -> l)
     (\(Text1 h t) x -> case unsnoc t of
                          Nothing -> Text1 x t
-                         Just (i, _) -> Text1 h i)
+                         Just (i, _) -> Text1 h (Text.snoc i x))
 
+-- |
+--
+-- >>> fmap (^. _init1) ("a" ^? _Text1)
+-- Just ""
+--
+-- >>> fmap (^. _init1) ("abc" ^? _Text1)
+-- Just "ab"
+--
+-- >>> fmap (_init1 %~ Text.toUpper) ("a" ^? _Text1)
+-- Just "a"
+--
+-- >>> fmap (_init1 %~ Text.toUpper) ("abc" ^? _Text1)
+-- Just "ABc"
 _init1 ::
   Lens'
     Text1
@@ -144,11 +207,61 @@ _init1 =
                 Nothing -> Text1 r Text.empty
                 Just (h', t') -> Text1 h' (Text.snoc t' r))
 
+class AsText1 p f s where
+  _Text1 ::
+    Optic' p f s Text1
+
+instance AsText1 p f Text1 where
+  _Text1 =
+    id
+
+instance (Profunctor p, Functor f) => AsText1 p f (NonEmpty Char) where
+  _Text1 =
+    packed1
+
+instance (Choice p, Applicative f) => AsText1 p f String where
+  _Text1 =
+    prism'
+      (\(Text1 h t) -> h : Text.unpack t)
+      (fmap (\(h, t) -> Text1 h (Text.pack t)) . uncons)
+
+instance (Choice p, Applicative f) => AsText1 p f Text where
+  _Text1 =
+    prism'
+      (\(Text1 h t) -> Text.cons h t)
+      (fmap (uncurry Text1) . Text.uncons)
+
 class IsText1 t where
   packed1 :: 
     Iso'
       (NonEmpty Char)
       t
+
+  tpacked1 ::
+    Iso'
+      Text
+      (Maybe t)      
+  tpacked1 =
+    iso
+      (fmap (\(h, t') -> (h :| Text.unpack t') ^. packed1) . Text.uncons)
+      (\t -> case t of
+               Nothing -> Text.empty
+               Just t' -> Text.pack (toList (packed1 # t')))
+
+  unpacked1 ::
+    Iso'
+      t
+      (NonEmpty Char)
+  unpacked1 =
+    from packed1
+
+  tunpacked1 ::
+    Iso'
+      (Maybe t)
+      Text
+  tunpacked1 =
+    from tpacked1
+
   text1 ::
     IndexedTraversal' Int t Char 
   text1 =
@@ -159,6 +272,13 @@ instance IsText1 Text1 where
     iso
       (\(h :| t) -> Text1 h (t ^. packed))
       (\(Text1 h t) -> h :| (packed # t))
+  
+  tpacked1 =
+    iso
+      (fmap (\(h, t') -> Text1 h t') . Text.uncons)
+      (\t -> case t of
+               Nothing -> Text.empty
+               Just (Text1 h t') -> Text.cons h t')
 
 instance IsText1 (NonEmpty Char) where
   packed1 =
@@ -166,18 +286,10 @@ instance IsText1 (NonEmpty Char) where
   text1 =
     indexing traverse
 
-unpacked1 ::
-  IsText1 t =>
-  Iso'
-    t
-    (NonEmpty Char)
-unpacked1 =
-  from packed1
-
 instance Cons Text1 Text1 Char Char where
   _Cons =
     prism'
-      (\(c, t) -> Text1 c (_text # t))
+      (\(c, t) -> Text1 c (_Text1 # t))
       (\(Text1 h t) -> fmap (\(h', t') -> (h, Text1 h' t')) (Text.uncons t))
 
 instance Snoc Text1 Text1 Char Char where
@@ -195,6 +307,8 @@ instance Reversing Text1 where
     case uncons (reversing t) of
       Nothing -> Text1 h Text.empty
       Just (h', t') -> Text1 h' (Text.snoc t' h)
+
+-- Iso' (Maybe Text1) Text
 
 ----
 -- The following should be in a lens-based package
