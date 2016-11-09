@@ -1,3 +1,12 @@
+0.0.4
+
+* Delete `instance Cons Text1 Text1 Char Char`. Issue #3
+* Delete `instance Snoc Text1 Text1 Char Char`. Issue #3
+* Introduce `instance Cons (Maybe Text1) (Maybe Text1) Char Char`.
+* Introduce `instance Snoc (Maybe Text1) (Maybe Text1) Char Char`.
+* `instance IsText (Maybe Text1)`
+* `isText1` :: Iso' Text (Maybe Text1)`
+
 0.0.3
 
 * Tests.
