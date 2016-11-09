@@ -20,7 +20,7 @@ module Data.Text1(
 
 import Control.Applicative(Applicative)
 import Control.Category(Category(id, (.)))
-import Control.Lens(Iso, IndexedTraversal', Optic', Profunctor, Choice, Cons(_Cons), Snoc(_Snoc), Reversing(reversing), uncons, unsnoc, Iso', Lens', Prism', prism', iso, lens, (^.), (#), from, indexing, traversed)
+import Control.Lens(Iso, IndexedTraversal', Optic', Profunctor, Choice, Reversing(reversing), uncons, unsnoc, Iso', Lens', Prism', prism', iso, lens, (^.), (#), from, indexing, traversed)
 import Control.Monad(Monad(return, (>>=), (>>)))
 import Data.Binary(Binary(put, get))
 import Data.Char(Char)
@@ -36,7 +36,7 @@ import Data.Ord(Ord, Ordering)
 import Data.Semigroup(Semigroup((<>)))
 import Data.String(String)
 import Data.Text(Text)
-import qualified Data.Text as Text(cons, snoc, append, null, init, last, empty, length, compareLength, uncons, pack, unpack, singleton)
+import qualified Data.Text as Text(cons, snoc, append, null, empty, length, compareLength, uncons, pack, unpack, singleton)
 import Data.Text.Lens(IsText(packed))
 import Data.Traversable(Traversable(traverse))
 import Data.Tuple(uncurry)
@@ -285,22 +285,6 @@ instance IsText1 (NonEmpty Char) where
     id
   text1 =
     indexing traverse
-
-instance Cons Text1 Text1 Char Char where
-  _Cons =
-    prism'
-      (\(c, t) -> Text1 c (_Text1 # t))
-      (\(Text1 h t) -> fmap (\(h', t') -> (h, Text1 h' t')) (Text.uncons t))
-
-instance Snoc Text1 Text1 Char Char where
-  _Snoc =
-    prism'
-      (\(Text1 h t, c) -> Text1 h (Text.snoc t c))
-      (\(Text1 h t) -> if Text.null t
-                         then
-                           Nothing
-                         else
-                           Just (Text1 h (Text.init t), Text.last t))
 
 instance Reversing Text1 where
   reversing (Text1 h t) =
