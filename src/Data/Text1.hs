@@ -14,13 +14,14 @@ module Data.Text1(
 , _init1
 , AsText1(_Text1)
 , IsText1(packed1, tpacked1, unpacked1, tunpacked1, text1)
+, isText1
 , AsSingle(_Single)
 , OneAnd(_OneAnd)
 ) where
 
 import Control.Applicative(Applicative)
 import Control.Category(Category(id, (.)))
-import Control.Lens(Iso, IndexedTraversal', Optic', Profunctor, Choice, Reversing(reversing), uncons, unsnoc, Iso', Lens', Prism', prism', iso, lens, (^.), (#), from, indexing, traversed)
+import Control.Lens(Iso, IndexedTraversal', Optic', Profunctor, Choice, Reversing(reversing), Cons(_Cons), Snoc(_Snoc), uncons, unsnoc, Iso', Lens', Prism', prism', iso, lens, (^.), (#), (^?), (%~), _1, _2, from, indexing, traversed)
 import Control.Monad(Monad(return, (>>=), (>>)))
 import Data.Binary(Binary(put, get))
 import Data.Char(Char)
@@ -37,11 +38,12 @@ import Data.Semigroup(Semigroup((<>)))
 import Data.String(String)
 import Data.Text(Text)
 import qualified Data.Text as Text(cons, snoc, append, null, empty, length, compareLength, uncons, pack, unpack, singleton)
-import Data.Text.Lens(IsText(packed))
+import Data.Text.Lens(IsText(packed, builder))
 import Data.Traversable(Traversable(traverse))
 import Data.Tuple(uncurry)
 import Data.Typeable(Typeable)
 import Prelude(Show(show), Num((+), (-)))
+
 
 -- $setup
 -- >>> import Control.Lens
@@ -286,13 +288,41 @@ instance IsText1 (NonEmpty Char) where
   text1 =
     indexing traverse
 
+instance IsText (Maybe Text1) where
+  packed =
+    packed . isText1
+  builder =
+    from isText1 . builder
+
 instance Reversing Text1 where
   reversing (Text1 h t) =
     case uncons (reversing t) of
       Nothing -> Text1 h Text.empty
       Just (h', t') -> Text1 h' (Text.snoc t' h)
 
--- Iso' (Maybe Text1) Text
+isText1 ::
+  Iso' Text (Maybe Text1)
+isText1 =
+  iso 
+    (\x ->
+      fmap (\(h, t) -> Text1 h t) (Text.uncons x))
+    (\x -> case x of
+             Nothing ->
+               Text.empty
+             Just (Text1 h t) ->
+               Text.cons h t)
+   
+instance Cons (Maybe Text1) (Maybe Text1) Char Char where
+  _Cons =
+    prism'
+      (\(h, t) -> (_Cons # (h, isText1 # t)) ^. isText1)
+      (\t -> fmap (_2 %~ (^. isText1)) ((isText1 # t) ^? _Cons))
+
+instance Snoc (Maybe Text1) (Maybe Text1) Char Char where 
+  _Snoc =
+    prism'
+      (\(t, s) -> (_Snoc # (isText1 # t, s)) ^. isText1)
+      (\t -> fmap (_1 %~ (^. isText1)) ((isText1 # t) ^? _Snoc))
 
 ----
 -- The following should be in a lens-based package
