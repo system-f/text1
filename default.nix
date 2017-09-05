@@ -21,7 +21,7 @@ let
     overrides = self: super: import sources.papa self // {};
   };
 
-  text1 = haskellPackages.callPackage ./text1.nix {};
+  text1 = modifiedHaskellPackages.callPackage ./text1.nix {};
 
 in
   text1
