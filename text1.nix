@@ -1,11 +1,11 @@
 { mkDerivation, base, binary, directory, doctest, filepath, lens
-, QuickCheck, semigroups, stdenv, template-haskell, text
+, papa, QuickCheck, semigroups, stdenv, template-haskell, text
 }:
 mkDerivation {
   pname = "text1";
   version = "0.0.5";
   src = ./.;
-  libraryHaskellDepends = [ base binary lens semigroups text ];
+  libraryHaskellDepends = [ base binary lens papa semigroups text ];
   testHaskellDepends = [
     base directory doctest filepath QuickCheck template-haskell
   ];

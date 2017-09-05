@@ -34,6 +34,7 @@ library
                     , text          >= 1.2 && < 2
                     , lens          >= 4.0 && < 5
                     , binary        >= 0.7 && < 1
+                    , papa
                     
   ghc-options:
                     -Wall
