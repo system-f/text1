@@ -12,8 +12,8 @@ let
     papa = pkgs.fetchFromGitHub {
       owner = "qfpl";
       repo = "papa";
-      rev = "97ef00aa45c70213a4f0ce348a2208e3f482a7e3";
-      sha256 = "0qm0ay49wc0frxs6ipc10xyjj654b0wgk0b1hzm79qdlfp2yq0n5";
+      rev = "f76316938c1d5398cc9ab01de12bfde6b68b8502";
+      sha256 = "14dlk0v2p6y65953bnmy6bm3m5a5fag209r53kq6ycwqw8m0m1ja";
     };
   };
 
