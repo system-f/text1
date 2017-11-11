@@ -18,7 +18,7 @@
             "keepnr": 5,
             "inputs": {
                 "text1": { "type": "git", "value": "https://github.com/qfpl/text1", "emailresponsible": false },
-                "nixpkgs": { "type": "git", "value": "https://github.com/NixOS/nixpkgs.git release-17.03", "emailresponsible": false }
+                "nixpkgs": { "type": "git", "value": "https://github.com/NixOS/nixpkgs.git release-17.09", "emailresponsible": false }
             }
         }
     }
