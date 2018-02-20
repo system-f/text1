@@ -27,7 +27,7 @@ import Data.Binary(Binary(put, get))
 import Data.Char(Char)
 import Data.Data(Data)
 import Data.Eq(Eq)
-import Data.Foldable(Foldable(toList))
+import Data.Foldable(toList)
 import Data.Functor(Functor(fmap))
 import Data.Int(Int)
 import Data.List as List(null)
@@ -50,8 +50,6 @@ import Prelude(Show(show), Num((+), (-)))
 -- >>> import Data.Char
 -- >>> import qualified Data.Text as Text
 -- >>> import Prelude
--- >>> import Test.QuickCheck
--- >>> instance Arbitrary Text1 where arbitrary = do c <- arbitrary; t <- arbitrary; return (Text1 c (Text.pack t))
 
 data Text1 =
   Text1
@@ -63,9 +61,6 @@ instance Show Text1 where
   show (Text1 h t) =
     show (Text.cons h t)
 
--- |
---
--- prop> ((x <> y) <> z) == (x <> (y <> z :: Text1))
 instance Semigroup Text1 where
   Text1 h1 t1 <> t = 
     Text1 h1 (Text.append t1 (_Text1 # t))
@@ -86,7 +81,6 @@ instance Binary Text1 where
 -- >>> fmap length1 ("abc" ^? _Text1)
 -- Just 3
 --
--- prop> length1 t >= 1
 length1 ::
   Text1
   -> Int
@@ -110,7 +104,6 @@ length1 (Text1 _ t) =
 -- >>> fmap (`compareLength1` 5) ("abc" ^? _Text1)
 -- Just LT
 --
--- prop> compareLength1 t 1 /= LT
 compareLength1 ::
   Text1
   -> Int
