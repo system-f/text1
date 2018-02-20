@@ -1,15 +1,13 @@
-{ mkDerivation, base, binary, Cabal, cabal-doctest, directory
-, doctest, filepath, lens, QuickCheck, semigroups, stdenv
-, template-haskell, text
+{ mkDerivation, base, binary, HUnit, lens, QuickCheck, semigroups
+, stdenv, text
 }:
 mkDerivation {
   pname = "text1";
   version = "0.0.5";
   src = ./.;
-  setupHaskellDepends = [ base Cabal cabal-doctest ];
   libraryHaskellDepends = [ base binary lens semigroups text ];
   testHaskellDepends = [
-    base directory doctest filepath QuickCheck template-haskell
+    base HUnit lens QuickCheck semigroups text
   ];
   homepage = "https://github.com/qfpl/text1";
   description = "Non-empty values of `Data.Text`.";
