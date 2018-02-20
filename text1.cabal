@@ -14,9 +14,8 @@ description:
 homepage:           https://github.com/qfpl/text1
 bug-reports:        https://github.com/qfpl/text1/issues
 cabal-version:      >= 1.10
-build-type:         Custom
+build-type:         Simple
 extra-source-files: changelog.md
-                    Warning.hs
 tested-with:        GHC == 7.4.2
                   , GHC == 7.6.3
                   , GHC == 7.8.4
@@ -28,12 +27,6 @@ tested-with:        GHC == 7.4.2
 source-repository   head
   type:             git
   location:         git@github.com:qfpl/text1.git
-
-custom-setup
-  setup-depends:
-    base          >= 4 && < 5,
-    Cabal,
-    cabal-doctest >= 1 && < 1.1
 
 library
   default-language:
@@ -58,19 +51,21 @@ library
   exposed-modules:
                     Data.Text1
 
-test-suite doctests
+test-suite hunit
   type:
                     exitcode-stdio-1.0
 
   main-is:
-                    doctests.hs
+                    hunit.hs
 
   default-language:
                     Haskell2010
 
   build-depends:
-                      base < 5 && >= 3
-                    , doctest >= 0.9.7 && < 0.15
+                      base  >= 4.5 && < 5
+                    , HUnit >= 1.2 && < 1.7
+                    , lens  >= 4.0 && < 5
+                    , text          >= 1.2 && < 2
                     , text1
 
   ghc-options:
@@ -78,4 +73,4 @@ test-suite doctests
                     -threaded
 
   hs-source-dirs:
-                    test
+                    tests

@@ -44,13 +44,6 @@ import Data.Tuple(uncurry)
 import Data.Typeable(Typeable)
 import Prelude(Show(show), Num((+), (-)))
 
-
--- $setup
--- >>> import Control.Lens
--- >>> import Data.Char
--- >>> import qualified Data.Text as Text
--- >>> import Prelude
-
 data Text1 =
   Text1
     Char
@@ -73,37 +66,12 @@ instance Binary Text1 where
        t <- get
        return (Text1 h t)
 
--- |
---
--- >>> fmap length1 ("a" ^? _Text1)
--- Just 1
---
--- >>> fmap length1 ("abc" ^? _Text1)
--- Just 3
---
 length1 ::
   Text1
   -> Int
 length1 (Text1 _ t) =
   1 + Text.length t
 
--- |
---
--- >>> fmap (`compareLength1` 1) ("a" ^? _Text1)
--- Just EQ
---
--- >>> fmap (`compareLength1` 3) ("a" ^? _Text1)
--- Just LT
---
--- >>> fmap (`compareLength1` 1) ("abc" ^? _Text1)
--- Just GT
---
--- >>> fmap (`compareLength1` 3) ("abc" ^? _Text1)
--- Just EQ
---
--- >>> fmap (`compareLength1` 5) ("abc" ^? _Text1)
--- Just LT
---
 compareLength1 ::
   Text1
   -> Int
@@ -111,16 +79,6 @@ compareLength1 ::
 compareLength1 (Text1 _ t) n =
   Text.compareLength t (n - 1)
 
--- |
---
--- >>> fmap (^. _head1) ("a" ^? _Text1)
--- Just 'a'
---
--- >>> fmap (^. _head1) ("abc" ^? _Text1)
--- Just 'a'
---
--- >>> fmap (_head1 %~ toUpper) ("abc" ^? _Text1)
--- Just "Abc"
 _head1 ::
   Lens'
     Text1
@@ -130,16 +88,6 @@ _head1 =
     (\(Text1 h _) -> h)
     (\(Text1 _ t) h -> Text1 h t)
 
--- |
---
--- >>> fmap (^. _tail1) ("a" ^? _Text1)
--- Just ""
---
--- >>> fmap (^. _tail1) ("abc" ^? _Text1)
--- Just "bc"
---
--- >>> fmap (_tail1 %~ Text.toUpper) ("abc" ^? _Text1)
--- Just "aBC"
 _tail1 ::
   Lens'
     Text1
@@ -149,16 +97,6 @@ _tail1 =
     (\(Text1 _ t) -> t)
     (\(Text1 h _) t -> Text1 h t)
 
--- |
---
--- >>> fmap (^. _last1) ("a" ^? _Text1)
--- Just 'a'
---
--- >>> fmap (^. _last1) ("abc" ^? _Text1)
--- Just 'c'
---
--- >>> fmap (_last1 %~ toUpper) ("abc" ^? _Text1)
--- Just "abC"
 _last1 ::
   Lens'
     Text1
@@ -172,19 +110,6 @@ _last1 =
                          Nothing -> Text1 x t
                          Just (i, _) -> Text1 h (Text.snoc i x))
 
--- |
---
--- >>> fmap (^. _init1) ("a" ^? _Text1)
--- Just ""
---
--- >>> fmap (^. _init1) ("abc" ^? _Text1)
--- Just "ab"
---
--- >>> fmap (_init1 %~ Text.toUpper) ("a" ^? _Text1)
--- Just "a"
---
--- >>> fmap (_init1 %~ Text.toUpper) ("abc" ^? _Text1)
--- Just "ABc"
 _init1 ::
   Lens'
     Text1
