@@ -1,5 +1,5 @@
 { mkDerivation, base, binary, Cabal, cabal-doctest, directory
-, doctest, filepath, lens, papa, QuickCheck, semigroups, stdenv
+, doctest, filepath, lens, QuickCheck, semigroups, stdenv
 , template-haskell, text
 }:
 mkDerivation {
@@ -7,7 +7,7 @@ mkDerivation {
   version = "0.0.5";
   src = ./.;
   setupHaskellDepends = [ base Cabal cabal-doctest ];
-  libraryHaskellDepends = [ base binary lens papa semigroups text ];
+  libraryHaskellDepends = [ base binary lens semigroups text ];
   testHaskellDepends = [
     base directory doctest filepath QuickCheck template-haskell
   ];

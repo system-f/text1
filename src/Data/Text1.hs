@@ -1,4 +1,3 @@
-{-# LANGUAGE NoImplicitPrelude #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
@@ -20,20 +19,37 @@ module Data.Text1(
 , OneAnd(_OneAnd)
 ) where
 
-import Control.Lens.Cons
-import Control.Monad(Monad((>>)))
+import Control.Applicative(Applicative)
+import Control.Category(Category(id, (.)))
+import Control.Lens(Iso, IndexedTraversal', Optic', Profunctor, Choice, Reversing(reversing), Cons(_Cons), Snoc(_Snoc), uncons, unsnoc, Iso', Lens', Prism', prism', iso, lens, (^.), (#), (^?), (%~), _1, _2, from, indexing, traversed)
+import Control.Monad(Monad(return, (>>=), (>>)))
 import Data.Binary(Binary(put, get))
+import Data.Char(Char)
 import Data.Data(Data)
+import Data.Eq(Eq)
+import Data.Foldable(Foldable(toList))
+import Data.Functor(Functor(fmap))
+import Data.Int(Int)
 import Data.List as List(null)
+import Data.List.NonEmpty(NonEmpty((:|)))
+import Data.Maybe(Maybe(Just, Nothing))
+import Data.Ord(Ord, Ordering)
+import Data.Semigroup(Semigroup((<>)))
+import Data.String(String)
 import Data.Text(Text)
 import qualified Data.Text as Text(cons, snoc, append, null, empty, length, compareLength, uncons, pack, unpack, singleton)
 import Data.Text.Lens(IsText(packed, builder))
+import Data.Traversable(Traversable(traverse))
 import Data.Tuple(uncurry)
 import Data.Typeable(Typeable)
-import Papa
+import Prelude(Show(show), Num((+), (-)))
+
 
 -- $setup
+-- >>> import Control.Lens
+-- >>> import Data.Char
 -- >>> import qualified Data.Text as Text
+-- >>> import Prelude
 -- >>> import Test.QuickCheck
 -- >>> instance Arbitrary Text1 where arbitrary = do c <- arbitrary; t <- arbitrary; return (Text1 c (Text.pack t))
 
