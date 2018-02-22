@@ -1,3 +1,8 @@
+0.0.6
+
+* Remove dependency on papa
+* Support GHC versions back to GHC 7.4
+
 0.0.4
 
 * Delete `instance Cons Text1 Text1 Char Char`. Issue #3
