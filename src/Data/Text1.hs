@@ -1,4 +1,3 @@
-{-# LANGUAGE NoImplicitPrelude #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
@@ -20,22 +19,30 @@ module Data.Text1(
 , OneAnd(_OneAnd)
 ) where
 
-import Control.Lens.Cons
-import Control.Monad(Monad((>>)))
+import Control.Applicative(Applicative)
+import Control.Category(Category(id, (.)))
+import Control.Lens(Iso, IndexedTraversal', Optic', Profunctor, Choice, Reversing(reversing), Cons(_Cons), Snoc(_Snoc), uncons, unsnoc, Iso', Lens', Prism', prism', iso, lens, (^.), (#), (^?), (%~), _1, _2, from, indexing, traversed)
+import Control.Monad(Monad(return, (>>=), (>>)))
 import Data.Binary(Binary(put, get))
+import Data.Char(Char)
 import Data.Data(Data)
+import Data.Eq(Eq)
+import Data.Foldable(toList)
+import Data.Functor(Functor(fmap))
+import Data.Int(Int)
 import Data.List as List(null)
+import Data.List.NonEmpty(NonEmpty((:|)))
+import Data.Maybe(Maybe(Just, Nothing))
+import Data.Ord(Ord, Ordering)
+import Data.Semigroup(Semigroup((<>)))
+import Data.String(String)
 import Data.Text(Text)
 import qualified Data.Text as Text(cons, snoc, append, null, empty, length, compareLength, uncons, pack, unpack, singleton)
 import Data.Text.Lens(IsText(packed, builder))
+import Data.Traversable(Traversable(traverse))
 import Data.Tuple(uncurry)
 import Data.Typeable(Typeable)
-import Papa
-
--- $setup
--- >>> import qualified Data.Text as Text
--- >>> import Test.QuickCheck
--- >>> instance Arbitrary Text1 where arbitrary = do c <- arbitrary; t <- arbitrary; return (Text1 c (Text.pack t))
+import Prelude(Show(show), Num((+), (-)))
 
 data Text1 =
   Text1
@@ -47,9 +54,6 @@ instance Show Text1 where
   show (Text1 h t) =
     show (Text.cons h t)
 
--- |
---
--- prop> ((x <> y) <> z) == (x <> (y <> z :: Text1))
 instance Semigroup Text1 where
   Text1 h1 t1 <> t = 
     Text1 h1 (Text.append t1 (_Text1 # t))
@@ -62,39 +66,12 @@ instance Binary Text1 where
        t <- get
        return (Text1 h t)
 
--- |
---
--- >>> fmap length1 ("a" ^? _Text1)
--- Just 1
---
--- >>> fmap length1 ("abc" ^? _Text1)
--- Just 3
---
--- prop> length1 t >= 1
 length1 ::
   Text1
   -> Int
 length1 (Text1 _ t) =
   1 + Text.length t
 
--- |
---
--- >>> fmap (`compareLength1` 1) ("a" ^? _Text1)
--- Just EQ
---
--- >>> fmap (`compareLength1` 3) ("a" ^? _Text1)
--- Just LT
---
--- >>> fmap (`compareLength1` 1) ("abc" ^? _Text1)
--- Just GT
---
--- >>> fmap (`compareLength1` 3) ("abc" ^? _Text1)
--- Just EQ
---
--- >>> fmap (`compareLength1` 5) ("abc" ^? _Text1)
--- Just LT
---
--- prop> compareLength1 t 1 /= LT
 compareLength1 ::
   Text1
   -> Int
@@ -102,16 +79,6 @@ compareLength1 ::
 compareLength1 (Text1 _ t) n =
   Text.compareLength t (n - 1)
 
--- |
---
--- >>> fmap (^. _head1) ("a" ^? _Text1)
--- Just 'a'
---
--- >>> fmap (^. _head1) ("abc" ^? _Text1)
--- Just 'a'
---
--- >>> fmap (_head1 %~ toUpper) ("abc" ^? _Text1)
--- Just "Abc"
 _head1 ::
   Lens'
     Text1
@@ -121,16 +88,6 @@ _head1 =
     (\(Text1 h _) -> h)
     (\(Text1 _ t) h -> Text1 h t)
 
--- |
---
--- >>> fmap (^. _tail1) ("a" ^? _Text1)
--- Just ""
---
--- >>> fmap (^. _tail1) ("abc" ^? _Text1)
--- Just "bc"
---
--- >>> fmap (_tail1 %~ Text.toUpper) ("abc" ^? _Text1)
--- Just "aBC"
 _tail1 ::
   Lens'
     Text1
@@ -140,16 +97,6 @@ _tail1 =
     (\(Text1 _ t) -> t)
     (\(Text1 h _) t -> Text1 h t)
 
--- |
---
--- >>> fmap (^. _last1) ("a" ^? _Text1)
--- Just 'a'
---
--- >>> fmap (^. _last1) ("abc" ^? _Text1)
--- Just 'c'
---
--- >>> fmap (_last1 %~ toUpper) ("abc" ^? _Text1)
--- Just "abC"
 _last1 ::
   Lens'
     Text1
@@ -163,19 +110,6 @@ _last1 =
                          Nothing -> Text1 x t
                          Just (i, _) -> Text1 h (Text.snoc i x))
 
--- |
---
--- >>> fmap (^. _init1) ("a" ^? _Text1)
--- Just ""
---
--- >>> fmap (^. _init1) ("abc" ^? _Text1)
--- Just "ab"
---
--- >>> fmap (_init1 %~ Text.toUpper) ("a" ^? _Text1)
--- Just "a"
---
--- >>> fmap (_init1 %~ Text.toUpper) ("abc" ^? _Text1)
--- Just "ABc"
 _init1 ::
   Lens'
     Text1
