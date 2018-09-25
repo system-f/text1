@@ -14,8 +14,8 @@ main =
   traverse quickCheckResult tests >>= traverse_ dieOnFail
   where
     dieOnFail x = case x of
-      Success _ _ _ -> pure ()
-      _             -> exitFailure
+      Success {} -> pure ()
+      _          -> exitFailure
 
 tests :: [Property]
 tests = [property semigroupAssoc, property length1GT1, property compareLength1NotLT]
