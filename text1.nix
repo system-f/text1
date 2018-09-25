@@ -3,7 +3,7 @@
 }:
 mkDerivation {
   pname = "text1";
-  version = "0.0.6";
+  version = "0.0.6.1";
   src = ./.;
   libraryHaskellDepends = [ base binary lens semigroups text ];
   testHaskellDepends = [
