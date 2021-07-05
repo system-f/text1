@@ -1,18 +1,18 @@
 name:               text1
-version:            0.0.6.1
+version:            0.0.7.0
 license:            BSD3
 license-file:       LICENCE
 author:             Queensland Functional Programming Lab <oᴉ˙ldɟb@llǝʞsɐɥ>
 maintainer:         Queensland Functional Programming Lab <oᴉ˙ldɟb@llǝʞsɐɥ>
-copyright:          Copyright (C) 2017 Commonwealth Scientific and Industrial Research Organisation (CSIRO)
+copyright:          Copyright (C) 2020-2021 Tony Morris
 synopsis:           Non-empty values of `Data.Text`.
 category:           Data
-description:        
-  <<https://raw.githubusercontent.com/qfpl/assets/master/data61-transparent-bg.png>>
+description:
+  <<https://system-f.gitlab.io/logo/systemf-450x450.jpg>>
   .
   Non-empty values of `Data.Text`.
-homepage:           https://github.com/qfpl/text1
-bug-reports:        https://github.com/qfpl/text1/issues
+homepage:           https://github.com/system-f/text1
+bug-reports:        https://github.com/system-f/text1/issues
 cabal-version:      >= 1.10
 build-type:         Simple
 extra-source-files: changelog.md
@@ -24,22 +24,24 @@ tested-with:        GHC == 7.4.2
                   , GHC == 8.2.2
                   , GHC == 8.4.3
                   , GHC == 8.6.1
+                  , GHC == 8.6.5
 
 source-repository   head
   type:             git
-  location:         git@github.com:qfpl/text1.git
+  location:         git@github.com:system-f/text1.git
 
 library
   default-language:
                     Haskell2010
 
   build-depends:
-                      base          >= 4.5 && < 4.13
-                    , semigroups    >= 0.8 && < 1
-                    , text          >= 1.2 && < 2
-                    , lens          >= 4.0 && < 5
-                    , binary        >= 0.5 && < 1
-                    
+                      base >= 4.5 && < 6
+                    , semigroups >= 0.8 && < 1
+                    , semigroupoids
+                    , text >= 1.2.3.0 && < 2
+                    , lens >= 4.0 && < 6
+                    , binary >= 0.5 && < 1
+
   ghc-options:
                     -Wall
 
@@ -51,6 +53,9 @@ library
 
   exposed-modules:
                     Data.Text1
+                    Data.Text1.AsSingle
+                    Data.Text1.Text1
+                    Data.Text1.IsText1
 
 test-suite hunit
   type:
@@ -63,10 +68,10 @@ test-suite hunit
                     Haskell2010
 
   build-depends:
-                      base  >= 4.5 && < 5
+                      base >= 4.5 && < 6
                     , HUnit >= 1.2 && < 1.7
-                    , lens  >= 4.0 && < 5
-                    , text  >= 1.2 && < 2
+                    , lens >= 4.0 && < 6
+                    , text >= 1.2.3.0 && < 2
                     , text1
 
   ghc-options:
@@ -87,10 +92,10 @@ test-suite quickcheck
                     Haskell2010
 
   build-depends:
-                      base  >= 4.5 && < 5
+                      base >= 4.5 && < 6
                     , QuickCheck >= 2.9 && < 2.13
-                    , semigroups    >= 0.8 && < 1
-                    , text  >= 1.2 && < 2
+                    , semigroups >= 0.8 && < 1
+                    , text >= 1.2 && < 2
                     , text1
 
   ghc-options:

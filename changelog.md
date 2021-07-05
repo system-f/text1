@@ -1,3 +1,7 @@
+0.0.7.0
+
+* Significant refactor
+
 0.0.6
 
 * Remove dependency on papa
