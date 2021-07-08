@@ -1,3 +1,8 @@
+0.0.7.1
+
+* More type-class instances
+* More type parameters to `AsSingle`
+
 0.0.7.0
 
 * Significant refactor

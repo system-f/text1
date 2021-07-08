@@ -1,5 +1,6 @@
 {-# OPTIONS_GHC -Wall #-}
 {-# LANGUAGE NoImplicitPrelude #-}
+{-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE FlexibleInstances #-}
 
@@ -7,6 +8,7 @@ module Data.Text1.IsText1(
   IsText1(..)
 , unpacked1
 , _NonEmpty
+, _NonEmptyMaybe
 ) where
 
 import Control.Category ( Category(id, (.)) )
@@ -24,6 +26,7 @@ import Control.Lens
 import Data.Char ( Char )
 import Data.Int ( Int )
 import Data.List.NonEmpty ( NonEmpty((:|)) )
+import Data.Maybe
 import Data.String ( String )
 import Data.Text(Text)
 import qualified Data.Text.Lazy as LazyText(Text)
@@ -93,3 +96,22 @@ _NonEmpty =
   iso
     (\(h :| t) -> (h, t))
     (uncurry (:|))
+
+_NonEmptyMaybe ::
+  Iso
+    [a]
+    [b]
+    (Maybe (NonEmpty a))
+    (Maybe (NonEmpty b))
+_NonEmptyMaybe =
+  iso
+    (\case
+      [] ->
+        Nothing
+      h:t ->
+        Just (h :| t))
+    (\case
+        Just (h :| t) ->
+          h:t
+        Nothing ->
+          [])

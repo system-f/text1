@@ -8,22 +8,23 @@ module Data.Text1.AsSingle(
   AsSingle(..)
 ) where
 
-import Control.Category ( Category(id, (.)) )
-import Control.Lens ( uncons, prism', Prism' )
+import Control.Category ( Category((.)) )
+import Control.Lens ( uncons, prism, prism', Prism )
 import Control.Monad ( (>=>) )
 import Data.Char ( Char )
+import Data.Either ( Either(Left, Right) )
 import Data.Functor.Identity ( Identity(..) )
-import Data.Maybe ( Maybe(..) )
+import Data.Maybe ( Maybe(..), maybe )
 import qualified Data.List as List(null)
 import Data.List.NonEmpty(NonEmpty((:|)))
 import Data.Text(Text)
 import qualified Data.Text as Text(singleton, null)
 import qualified Data.Text.Lazy as LazyText(Text, singleton, null)
 
-class AsSingle c a | c -> a where
-  _Single :: Prism' c a
+class AsSingle s t a b | s -> a, t -> b, s b -> t, t a -> s where
+  _Single :: Prism s t a b
 
-instance AsSingle [a] a where
+instance AsSingle [a] [a] a a where
   _Single =
     prism'
       (:[])
@@ -31,31 +32,31 @@ instance AsSingle [a] a where
         [a] -> Just a
         _   -> Nothing)
 
-instance AsSingle Text Char where
+instance AsSingle Text Text Char Char where
   _Single =
     prism'
       Text.singleton
       (uncons >=> \(h, t') -> if Text.null t' then Just h else Nothing)
 
-instance AsSingle LazyText.Text Char where
+instance AsSingle LazyText.Text LazyText.Text Char Char where
   _Single =
     prism'
       LazyText.singleton
       (uncons >=> \(h, t') -> if LazyText.null t' then Just h else Nothing)
 
-instance AsSingle (Maybe a) a where
+instance AsSingle (Maybe a) (Maybe b) a b where
   _Single =
-    prism'
+    prism
       Just
-      id
+      (maybe (Left Nothing) Right)
 
-instance AsSingle (Identity a) a where
+instance AsSingle (Identity a) (Identity b) a b where
   _Single =
-    prism'
-      Identity
-      (Just . runIdentity)
+    prism
+        Identity
+        (Right . runIdentity)
 
-instance AsSingle (NonEmpty a) a where
+instance AsSingle (NonEmpty a) (NonEmpty a) a a where
   _Single =
     prism'
       (:|[])

@@ -1,6 +1,6 @@
 {-# OPTIONS_GHC -Wall #-}
 {-# LANGUAGE NoImplicitPrelude #-}
-{-# LANGUAGE LambdaCase #-}
+{-# LANGUAGE DefaultSignatures #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE TypeFamilies #-}
@@ -18,8 +18,6 @@ module Data.Text1.Text1(
 , _tail1
 , _last1
 , _init1
-, maybeText
-, maybeLazyText
 , each1
 ) where
 
@@ -48,6 +46,7 @@ import Control.Lens
       Iso',
       Lens',
       Prism',
+      Traversal',
       Traversal1' )
 import Data.Binary(Binary(put, get))
 import Data.Char(Char)
@@ -63,10 +62,10 @@ import Data.Semigroup(Semigroup((<>)))
 import Data.String(String)
 import Data.Text(Text)
 import qualified Data.Text as Text(cons, snoc, uncons, unsnoc, null, empty, length, compareLength, append, unpack, pack)
-import qualified Data.Text.Lazy as LazyText(Text, toStrict, fromStrict)
-import Data.Text.Lens ( IsText(builder), text )
+import qualified Data.Text.Lazy as LazyText(Text)
+import Data.Text.Lens ( IsText(builder, packed), text )
 import Data.Text1.AsSingle ( AsSingle(..) )
-import Data.Text1.IsText1 ( IsText1(packed1, builder1) )
+import Data.Text1.IsText1 ( IsText1(packed1, builder1), _NonEmptyMaybe )
 import Data.Tuple(uncurry)
 import Data.Typeable(Typeable)
 import GHC.Show(Show(show))
@@ -78,41 +77,93 @@ data Text1 =
     !Text
   deriving (Eq, Ord, Data, Typeable)
 
+class ManyText1 a where
+  _Text1_ :: Traversal' a Text1
+  default _Text1_ :: HasText1 a => Traversal' a Text1
+  _Text1_ = text1
+
+instance ManyText1 Text1
+
+instance ManyText1 (NonEmpty Char)
+
+instance ManyText1 (Char, String)
+
+instance ManyText1 (Char, Text)
+
+instance ManyText1 (Char, LazyText.Text)
+
+instance ManyText1 String where
+  _Text1_ =
+    _Text1
+
+instance ManyText1 Text where
+  _Text1_ =
+    _Text1
+
+instance ManyText1 LazyText.Text where
+  _Text1_ =
+    _Text1
+
+class ManyText1' a where
+  _Text1_' :: Traversal1' a Text1
+  default _Text1_' :: HasText1 a => Traversal1' a Text1
+  _Text1_' = text1
+
+instance ManyText1' Text1
+
+instance ManyText1' (NonEmpty Char)
+
+instance ManyText1' (Char, String)
+
+instance ManyText1' (Char, Text)
+
+instance ManyText1' (Char, LazyText.Text)
+
 class AsText1 a where
   _Text1 ::
     Prism'
       a
       Text1
+  default _Text1 :: IsText1 a => Prism' a Text1
+  _Text1 =
+    from packed1 . packed1
 
 instance AsText1 Text1 where
-  _Text1 =
-    id
 
 instance AsText1 (NonEmpty Char) where
-  _Text1 =
-    packed1
 
 instance AsText1 String where
   _Text1 =
-    prism'
-      (\(Text1 h t) -> h : Text.unpack t)
-      (fmap (\(h, t) -> Text1 h (Text.pack t)) . uncons)
+    from packed . _NonEmptyMaybe . _Just . packed1
 
 instance AsText1 Text where
   _Text1 =
-    maybeText . _Just
+    from packed . _NonEmptyMaybe . _Just . packed1
 
 instance AsText1 LazyText.Text where
   _Text1 =
-    maybeLazyText . _Just
+    from packed . _NonEmptyMaybe . _Just . packed1
 
 class HasText1 a where
   text1 ::
     Lens' a Text1
+  default text1 :: IsText1 a => Lens' a Text1
+  text1 =
+    from packed1 . packed1
 
 instance HasText1 Text1 where
   text1 =
     id
+
+instance HasText1 (NonEmpty Char) where
+  text1 =
+    packed1
+
+instance HasText1 (Char, String) where
+
+instance HasText1 (Char, Text) where
+
+instance HasText1 (Char, LazyText.Text) where
 
 instance IsText1 Text1 where
   packed1 =
@@ -122,7 +173,7 @@ instance IsText1 Text1 where
   builder1 =
     from (cons1 . seconding builder)
 
-instance AsSingle Text1 Char where
+instance AsSingle Text1 Text1 Char Char where
   _Single =
     prism'
       (`Text1` Text.empty)
@@ -249,26 +300,6 @@ _init1 ::
     Text
 _init1 =
   snoc1 . _1
-
-maybeText ::
-  Iso'
-    Text
-    (Maybe Text1)
-maybeText =
-  iso
-    (fmap (uncurry Text1) . Text.uncons)
-    (\case
-        Nothing ->
-          Text.empty
-        Just (Text1 h t) ->
-          Text.cons h t)
-
-maybeLazyText ::
-  Iso'
-    LazyText.Text
-    (Maybe Text1)
-maybeLazyText =
-  iso LazyText.toStrict LazyText.fromStrict . maybeText
 
 each1 ::
   Traversal1' Text1 Char
