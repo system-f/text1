@@ -1,3 +1,7 @@
+0.0.7.2
+
+* Fix to export `ManyText1`
+
 0.0.7.1
 
 * More type-class instances

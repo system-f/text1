@@ -10,6 +10,8 @@ module Data.Text1.Text1(
   Text1(..)
 , AsText1(..)
 , HasText1(..)
+, ManyText1(..)
+, ManyText1'(..)
 , cons1
 , snoc1
 , length1

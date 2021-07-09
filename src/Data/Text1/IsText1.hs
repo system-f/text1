@@ -26,7 +26,7 @@ import Control.Lens
 import Data.Char ( Char )
 import Data.Int ( Int )
 import Data.List.NonEmpty ( NonEmpty((:|)) )
-import Data.Maybe
+import Data.Maybe ( Maybe( Nothing, Just ) )
 import Data.String ( String )
 import Data.Text(Text)
 import qualified Data.Text.Lazy as LazyText(Text)
@@ -43,11 +43,11 @@ class IsText1 t where
     Iso'
       (Char, Builder)
       t
-  _Text1_ ::
+  textChar ::
     IndexedTraversal' Int t Char
-  _Text1_ =
+  textChar =
     from packed1 . traversed
-  {-# INLINE _Text1_ #-}
+  {-# INLINE textChar #-}
 
 unpacked1 ::
   IsText1 t => Iso' t (NonEmpty Char)
@@ -59,7 +59,7 @@ instance IsText1 (NonEmpty Char) where
     id
   builder1 =
     seconding (from builder) . from _NonEmpty
-  _Text1_ =
+  textChar =
     indexing traverse
 
 instance IsText1 (Char, String) where
@@ -67,7 +67,7 @@ instance IsText1 (Char, String) where
     _NonEmpty
   builder1 =
     seconding (from builder)
-  _Text1_ =
+  textChar =
     indexing (\f (c, cs) -> (,) <$> f c <*> traverse f cs)
 
 instance IsText1 (Char, Text) where
@@ -75,7 +75,7 @@ instance IsText1 (Char, Text) where
     _NonEmpty . seconding packed
   builder1 =
     seconding (from builder)
-  _Text1_ =
+  textChar =
     indexing (\f (h, t) -> (,) <$> f h <*> text f t)
 
 instance IsText1 (Char, LazyText.Text) where
@@ -83,7 +83,7 @@ instance IsText1 (Char, LazyText.Text) where
     _NonEmpty . seconding packed
   builder1 =
     seconding (from builder)
-  _Text1_ =
+  textChar =
     indexing (\f (h, t) -> (,) <$> f h <*> text f t)
 
 _NonEmpty ::
