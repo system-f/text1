@@ -1,3 +1,7 @@
+0.0.7.3
+
+* Add operators for `cons1` and `snoc1`
+
 0.0.7.2
 
 * Fix to export `ManyText1`

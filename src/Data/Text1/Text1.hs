@@ -13,7 +13,9 @@ module Data.Text1.Text1(
 , ManyText1(..)
 , ManyText1'(..)
 , cons1
+, (.:)
 , snoc1
+, (+:)
 , length1
 , compareLength1
 , _head1
@@ -26,13 +28,15 @@ module Data.Text1.Text1(
 import Control.Applicative(Applicative((<*>), pure), (*>))
 import Control.Category(Category(id, (.)))
 import Control.Lens
-    ( uncons,
-      cons,
+    ( cons,
+      uncons,
       from,
       iso,
       seconding,
+      _Just,
       prism',
       (#),
+      review,
       over,
       Index,
       IxValue,
@@ -44,7 +48,6 @@ import Control.Lens
       Plated(..),
       Field1(_1),
       Field2(_2),
-      _Just,
       Iso',
       Lens',
       Prism',
@@ -244,6 +247,15 @@ cons1 =
     (\(Text1 h t) -> (h, t))
     (uncurry Text1)
 
+(.:) ::
+  Char
+  -> Text
+  -> Text1
+a .: b =
+  review cons1 (a, b)
+
+infixr 5 .:
+
 snoc1 ::
   Iso'
     Text1
@@ -261,6 +273,15 @@ snoc1 =
       Just (h, t) ->
         Text1 h (Text.snoc t l)
     )
+
+(+:) ::
+  Text
+  -> Char
+  -> Text1
+a +: b =
+  review snoc1 (a, b)
+
+infixr 5 +:
 
 length1 ::
   Text1
