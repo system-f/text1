@@ -16,6 +16,8 @@ module Data.Text1.Text1(
 , (.:)
 , snoc1
 , (+:)
+, (<>.)
+, (.<>)
 , length1
 , compareLength1
 , _head1
@@ -282,6 +284,28 @@ a +: b =
   review snoc1 (a, b)
 
 infixr 5 +:
+
+(<>.) ::
+  Text1
+  -> Text
+  -> Text1
+t <>. x =
+  over _tail1 (`Text.append` x) t
+
+infixr 5 <>.
+
+(.<>) ::
+  Text
+  -> Text1
+  -> Text1
+t .<> x =
+  case Text.uncons t of
+    Nothing ->
+      x
+    Just (h, t') ->
+      Text1 h (t' `Text.append` (h `Text.cons` t'))
+
+infixr 5 .<>
 
 length1 ::
   Text1

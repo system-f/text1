@@ -1,9 +1,9 @@
 name:               text1
-version:            0.0.7.3
+version:            0.0.7.4
 license:            BSD3
 license-file:       LICENCE
-author:             Queensland Functional Programming Lab <oᴉ˙ldɟb@llǝʞsɐɥ>
-maintainer:         Queensland Functional Programming Lab <oᴉ˙ldɟb@llǝʞsɐɥ>
+author:             Tony Morris <ʇǝu˙sıɹɹoɯʇ@ןןǝʞsɐɥ>
+maintainer:         Tony Morris <ʇǝu˙sıɹɹoɯʇ@ןןǝʞsɐɥ>
 copyright:          Copyright (C) 2020-2021 Tony Morris
 synopsis:           Non-empty values of `Data.Text`.
 category:           Data

@@ -1,3 +1,7 @@
+0.0.7.4
+
+* Add operators for appending `Text`
+
 0.0.7.3
 
 * Add operators for `cons1` and `snoc1`
